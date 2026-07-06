@@ -12,6 +12,7 @@ dependencies = [
     "pystray>=0.19.5",
     "pillow>=10.0",
     "pywin32>=306; sys_platform == 'win32'",
+    "pycaw>=20240210; sys_platform == 'win32'",
     "pynput>=1.7.6; sys_platform == 'darwin'",
     "pyobjc-framework-Cocoa>=10.0; sys_platform == 'darwin'",
     "pyobjc-framework-Quartz>=10.0; sys_platform == 'darwin'",

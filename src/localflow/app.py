@@ -21,6 +21,7 @@ from .audio import Recorder, default_input_device, list_input_devices, peak_rms,
 from .config import AUDIO_DIR, DATA_DIR, LOG_DIR, load_config, save_config
 from .context import AppContext, get_foreground_context
 from .db import DB
+from .ducking import SystemMuter
 from .hotkeys import HotkeyManager
 from .insert import (ClipboardError, capture_selection, get_clipboard_text,
                      insert_text, set_clipboard_text)
@@ -79,6 +80,7 @@ class App:
         self.tray = Tray(self)
         self.recorder = Recorder(device=cfg["audio"]["device"],
                                  on_level=self.ui.set_level)
+        self.muter = SystemMuter()
         self.llm_mgr = LlamaServerManager(cfg)
         self.llama = LlamaClient(port=cfg["llm"]["port"],
                                  timeout_s=cfg["llm"]["timeout_s"])
@@ -176,6 +178,9 @@ class App:
 
     def on_paste_last(self) -> None:
         self._spawn(self._paste_last)
+
+    def on_copy_last(self) -> None:
+        self._spawn(self._copy_last)
 
     # ---- background init -------------------------------------------------
     def start_background_init(self) -> None:
@@ -336,6 +341,8 @@ class App:
                 self.tray.notify("Microphone error", str(e))
                 return
             self.state = RECORDING
+            if self.cfg["audio"].get("mute_during_dictation", True):
+                self.muter.mute_others()
             self.session = {"mode": mode, "ctx": ctx, "t0": time.monotonic()}
             self._max_timer = threading.Timer(
                 float(self.cfg["audio"]["max_seconds"]),
@@ -363,6 +370,7 @@ class App:
                 self._max_timer = None
             elapsed_ms = (time.monotonic() - sess["t0"]) * 1000
             audio = self.recorder.stop()
+            self.muter.restore()
             if origin == "ptt" and elapsed_ms < float(self.cfg["audio"]["min_utterance_ms"]):
                 self.state = IDLE
                 self.session = None
@@ -416,6 +424,7 @@ class App:
                 self._max_timer.cancel()
                 self._max_timer = None
             self.recorder.cancel()
+            self.muter.restore()
             self.state = IDLE
             self.session = None
         self.hotkeys.disable_cancel()
@@ -637,6 +646,18 @@ class App:
         except ClipboardError:
             self.tray.notify("Paste failed", "Clipboard busy — try again.")
 
+    def _copy_last(self) -> None:
+        text = self.db.last_final_text()
+        if not text:
+            self.tray.notify("Local Flow", "No transcript in history yet.")
+            return
+        try:
+            set_clipboard_text(text)
+        except ClipboardError:
+            self.tray.notify("Copy failed", "Clipboard busy — try again.")
+            return
+        self.tray.notify("Copied to clipboard", text[:120])
+
     # ---- shutdown ------------------------------------------------------------
     def quit(self) -> None:
         if self._quitting:
@@ -645,7 +666,7 @@ class App:
         log.info("shutting down")
 
         def _shutdown():
-            for step in (self.hotkeys.stop, self.recorder.cancel):
+            for step in (self.hotkeys.stop, self.recorder.cancel, self.muter.restore):
                 try:
                     step()
                 except Exception:

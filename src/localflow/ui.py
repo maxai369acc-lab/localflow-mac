@@ -434,6 +434,7 @@ class Tray:
             I("Hands-free dictation", lambda *_: a.on_handsfree_toggle(),
               checked=lambda item: a.handsfree_active),
             I("Paste last transcript", lambda *_: a.on_paste_last()),
+            I("Copy last transcript", lambda *_: a.on_copy_last()),
             M.SEPARATOR,
             I("Cleanup level", M(*[level_item(n) for n in
                                    ("off", "light", "medium", "high")])),

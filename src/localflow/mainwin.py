@@ -233,6 +233,8 @@ class MainWindow:
         row = tk.Frame(left, bg=CARD)
         row.pack(fill="x", pady=(18, 4))
         eyebrow(row, "Today").pack(side="left")
+        tk.Label(row, text="hit Copy to reuse a take", bg=CARD, fg=DIMT,
+                 font=(FONT, 8)).pack(side="left", padx=(10, 0), pady=(2, 0))
         btn_ghost(row, "Refresh", self._refresh_home).pack(side="right")
 
         self.today = tk.Frame(left, bg=CARD, highlightthickness=1,
@@ -270,15 +272,33 @@ class MainWindow:
             tk.Label(r, text=t, bg=CARD, fg=DIMT, width=8, anchor="w",
                      font=(self._mono, 8)).pack(side="left", padx=(14, 4),
                                                 pady=7)
+            full = final or raw or ""
+            btn = tk.Button(r, text="Copy", relief="flat", bd=0,
+                            cursor="hand2", padx=8, pady=1, font=(FONT, 8),
+                            bg=CARD, fg=DIMT, activebackground=LINE,
+                            activeforeground=TEXT)
+            btn.pack(side="right", padx=(6, 12))
             lbl = tk.Label(r, text=text[:95], bg=CARD, fg=TEXT, anchor="w",
                            font=(FONT, 10))
             lbl.pack(side="left", fill="x", expand=True, pady=7)
             tk.Frame(self.today, bg=LINE, height=1).pack(fill="x")
-            full = final or raw or ""
 
-            def _copy(_e, txt=full):
-                self.win.clipboard_clear()
-                self.win.clipboard_append(txt)
+            def _copy(_e=None, txt=full, b=btn):
+                try:
+                    from .insert import set_clipboard_text
+                    set_clipboard_text(txt)
+                except Exception:
+                    self.win.clipboard_clear()
+                    self.win.clipboard_append(txt)
+                b.config(text="Copied ✓", fg=MINT)
+
+                def _revert(b=b):
+                    try:
+                        b.config(text="Copy", fg=DIMT)
+                    except tk.TclError:
+                        pass
+                self.win.after(1400, _revert)
+            btn.config(command=_copy)
             for w in (r, lbl):
                 w.bind("<Double-1>", _copy)
             shown += 1

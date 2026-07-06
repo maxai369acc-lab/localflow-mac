@@ -90,6 +90,7 @@ DEFAULTS: dict = {
         "max_seconds": 180,
         "min_utterance_ms": 300,
         "silence_rms": 0.0035,
+        "mute_during_dictation": True,  # mute other apps' audio while recording
     },
     "paste": {
         "restore_clipboard": True,
