@@ -192,8 +192,10 @@ class App:
             self._spawn(self._start_llm)
         if self.cfg["dev"]["enabled"] and self.cfg["dev"]["workspace_folders"]:
             self._spawn(self._scan_dev)
-        if (is_packaged() and self.cfg["update"]["check_enabled"]
+        if (sys.platform == "win32" and is_packaged()
+                and self.cfg["update"]["check_enabled"]
                 and self.cfg["update"]["repo"]):
+            # the update feed only carries Windows builds; Mac updates by recompiling
             self._spawn(self._update_check_loop)
 
     # ---- auto-update -------------------------------------------------------
