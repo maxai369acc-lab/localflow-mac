@@ -122,6 +122,12 @@ class App:
         save_config(self.cfg)
         self.tray.set_state(self.state)
 
+    def set_audio_option(self, key: str, on: bool) -> None:
+        """Flip a dictation-time audio option (mute_during_dictation /
+        mute_mic_for_others) and persist it."""
+        self.cfg["audio"][key] = bool(on)
+        save_config(self.cfg)
+
     def set_engine(self, name: str) -> None:
         """Switch ASR engine (whisper|parakeet); loads in the background."""
         if name == self.cfg["asr"]["engine"]:

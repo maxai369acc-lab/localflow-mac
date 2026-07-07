@@ -495,6 +495,15 @@ class MainWindow:
                         lambda: a.set_cleanup_level(self.level_var.get())
                         ).pack(side="left", padx=(0, 12))
 
+        box = self._section(f, "While dictating")
+        self.mute_sound_var = tk.BooleanVar(
+            value=a.cfg["audio"].get("mute_during_dictation", True))
+        self._check(box, "Mute other apps' sound (music, videos)",
+                    self.mute_sound_var,
+                    lambda: a.set_audio_option(
+                        "mute_during_dictation", self.mute_sound_var.get())
+                    ).pack(anchor="w")
+
         box = self._section(f, "Interface")
         self.overlay_var = tk.BooleanVar(value=a.cfg["ui"]["show_overlay"])
         self.widget_var = tk.BooleanVar(value=a.cfg["ui"]["show_widget"])

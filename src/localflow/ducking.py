@@ -4,6 +4,12 @@ Windows-only (WASAPI per-app sessions via pycaw). On other platforms, or if
 pycaw/COM is unavailable, every method is a silent no-op — dictation must
 never be blocked by this feature.
 
+Playback (render) sessions only. Muting the *capture* side per-app is not
+possible: ISimpleAudioVolume on a capture session controls the shared
+endpoint, so muting another app's mic session silences every stream on the
+device — ours included (verified live 2026-07-07: session and volume
+changes on one capture session propagated to all sessions and the endpoint).
+
 Session COM objects are never held across calls: mute_others() snapshots
 (pid, was_muted) pairs and restore() re-enumerates sessions on the calling
 thread, so short-lived worker threads can each do their own COM work.

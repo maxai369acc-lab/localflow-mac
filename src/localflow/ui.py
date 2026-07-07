@@ -438,6 +438,12 @@ class Tray:
             M.SEPARATOR,
             I("Cleanup level", M(*[level_item(n) for n in
                                    ("off", "light", "medium", "high")])),
+            I("Mute other apps' sound while dictating",
+              lambda *_: a.set_audio_option(
+                  "mute_during_dictation",
+                  not a.cfg["audio"].get("mute_during_dictation", True)),
+              checked=lambda item: a.cfg["audio"].get(
+                  "mute_during_dictation", True)),
             I("Developer mode", M(
                 I(lambda item: (f"{len(a.dev_identifiers)} identifiers from "
                                 f"{len(a.cfg['dev'].get('workspace_folders', []))} folder(s)"),
